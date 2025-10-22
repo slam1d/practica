@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoreLoom{% endblock %}</title>
+
+    <!-- Базовые стили -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+
+    <!-- Дополнительные стили для конкретных страниц -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <a href="{% url 'quests:home' %}" class="logo">LoreLoom</a>
+            <nav>
+                <a href="{% url 'quests:catalog' %}">Каталог</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'accounts:profile' %}">Мой профиль</a>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Выйти</a>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Войти</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary">Регистрация</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="message {{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 LoreLoom. Создай свою историю!</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

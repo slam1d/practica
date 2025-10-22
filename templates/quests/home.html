@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}LoreLoom - Главная{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>🎮 LoreLoom</h1>
+    <p>Создавай и проходи интерактивные текстовые квесты</p>
+    <div class="hero-buttons">
+        <a href="{% url 'quests:catalog' %}" class="btn btn-primary">Начать играть</a>
+        {% if user.is_authenticated %}
+            <a href="#" class="btn btn-secondary">Создать квест</a>
+        {% else %}
+            <a href="{% url 'accounts:register' %}" class="btn btn-secondary">Создать квест</a>
+        {% endif %}
+    </div>
+</div>
+
+<section class="section">
+    <h2 class="section-title">🔥 Популярные квесты</h2>
+
+    {% if popular_quests %}
+    <div class="quest-grid">
+        {% for quest in popular_quests %}
+        <div class="quest-card" onclick="location.href='{% url 'quests:detail' quest.pk %}'">
+            {% if quest.cover_image %}
+                <img src="{{ quest.cover_image.url }}" alt="{{ quest.title }}" class="quest-cover">
+            {% else %}
+                <div class="quest-cover" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                    📖
+                </div>
+            {% endif %}
+            <div class="quest-info">
+                <h3 class="quest-title">{{ quest.title }}</h3>
+                <p class="quest-description">
+                    {{ quest.description|truncatewords:15 }}
+                </p>
+                <div class="quest-meta">
+                    <span>👤 {{ quest.author.username }}</span>
+                    <span class="difficulty-badge difficulty-{{ quest.difficulty }}">
+                        {{ quest.get_difficulty_display }}
+                    </span>
+                </div>
+                <div class="quest-meta">
+                    <span>⭐ {{ quest.rating|floatformat:1 }}</span>
+                    <span>🎮 {{ quest.play_count }} прохождений</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📚</div>
+        <p>Пока нет опубликованных квестов. Будь первым!</p>
+    </div>
+    {% endif %}
+
+    <div class="text-center">
+        <a href="{% url 'quests:catalog' %}" class="btn btn-primary">Смотреть все квесты</a>
+    </div>
+</section>
+{% endblock %}

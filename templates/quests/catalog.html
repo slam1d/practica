@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Каталог квестов - LoreLoom{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/catalog.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="catalog-header">
+    <h1 class="catalog-title">📚 Каталог квестов</h1>
+</div>
+
+<!-- Фильтры -->
+<div class="filters-container">
+    <form method="get" action="{% url 'quests:catalog' %}">
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Сложность</label>
+                <select name="difficulty" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Все</option>
+                    <option value="easy" {% if current_difficulty == 'easy' %}selected{% endif %}>
+                        Лёгкий
+                    </option>
+                    <option value="medium" {% if current_difficulty == 'medium' %}selected{% endif %}>
+                        Средний
+                    </option>
+                    <option value="hard" {% if current_difficulty == 'hard' %}selected{% endif %}>
+                        Сложный
+                    </option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Сортировка</label>
+                <select name="sort" class="filter-select" onchange="this.form.submit()">
+                    <option value="-created_at">Новые</option>
+                    <option value="-play_count">Популярные</option>
+                    <option value="-rating">По рейтингу</option>
+                    <option value="title">По названию (А-Я)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="search-bar">
+            <input 
+                type="text" 
+                name="search" 
+                class="search-input" 
+                placeholder="Поиск по названию или описанию..."
+                value="{{ search_query|default:'' }}"
+            >
+            <button type="submit" class="search-btn">🔍 Искать</button>
+        </div>
+        
+        <!-- Скрытое поле для сохранения выбранного тега -->
+        {% if current_tag %}
+        <input type="hidden" name="tag" value="{{ current_tag }}">
+        {% endif %}
+    </form>
+</div>
+
+<!-- Теги/Жанры -->
+{% if tags %}
+<div class="tags-container">
+    <a href="{% url 'quests:catalog' %}" class="tag-chip {% if not current_tag %}active{% endif %}">
+        Все жанры
+    </a>
+    {% for tag in tags %}
+    <a href="?tag={{ tag.slug }}" class="tag-chip {% if current_tag == tag.slug %}active{% endif %}">
+        {{ tag.name }}
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Информация о результатах -->
+<div class="sort-bar">
+    <div class="quest-count">
+        Найдено квестов: <strong>{{ quests.count }}</strong>
+    </div>
+</div>
+
+<!-- Сетка квестов -->
+{% if quests %}
+<div class="quest-grid">
+    {% for quest in quests %}
+    <div class="quest-card" onclick="location.href='{% url 'quests:detail' quest.pk %}'">
+        {% if quest.cover_image %}
+            <img src="{{ quest.cover_image.url }}" alt="{{ quest.title }}" class="quest-cover">
+        {% else %}
+            <div class="quest-cover" style="display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                📖
+            </div>
+        {% endif %}
+        <div class="quest-info">
+            <h3 class="quest-title">{{ quest.title }}</h3>
+            <p class="quest-description">
+                {{ quest.description|truncatewords:15 }}
+            </p>
+            <div class="quest-meta">
+                <span>👤 {{ quest.author.username }}</span>
+                <span class="difficulty-badge difficulty-{{ quest.difficulty }}">
+                    {{ quest.get_difficulty_display }}
+                </span>
+            </div>
+            <div class="quest-meta">
+                <span>⭐ {{ quest.rating|floatformat:1 }}</span>
+                <span>🎮 {{ quest.play_count }}</span>
+                <span>⏱️ {{ quest.estimated_time }} мин</span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="no-results">
+    <div class="no-results-icon">🔍</div>
+    <h3>Квесты не найдены</h3>
+    <p>Попробуйте изменить параметры поиска</p>
+</div>
+{% endif %}
+{% endblock %}

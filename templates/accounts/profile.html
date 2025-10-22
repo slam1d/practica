@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль - LoreLoom{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Сайдбар -->
+    <aside class="profile-sidebar">
+        <div class="profile-avatar">
+            {% if user.avatar %}
+                <img src="{{ user.avatar.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            {% else %}
+                👤
+            {% endif %}
+        </div>
+        
+        <h2 class="profile-name">{{ user.username }}</h2>
+        <p class="profile-email">{{ user.email }}</p>
+        
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <span class="profile-stat-label">Создано квестов</span>
+                <span class="profile-stat-value">{{ created_quests.count }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">В процессе</span>
+                <span class="profile-stat-value">{{ progress.count }}</span>
+            </div>
+            <div class="profile-stat">
+                <span class="profile-stat-label">Завершено</span>
+                <span class="profile-stat-value">
+                    {{ progress|length }}
+                </span>
+            </div>
+        </div>
+        
+        <nav class="profile-nav">
+            <a href="#created" class="profile-nav-item active">
+                📝 Мои квесты
+            </a>
+            <a href="#progress" class="profile-nav-item">
+                🎮 Прогресс
+            </a>
+            <a href="#settings" class="profile-nav-item">
+                ⚙️ Настройки
+            </a>
+        </nav>
+    </aside>
+    
+    <!-- Основная область -->
+    <main class="profile-main">
+        <!-- Созданные квесты -->
+        <section class="profile-section" id="created">
+            <div class="profile-section-header">
+                <h2 class="profile-section-title">📝 Мои квесты</h2>
+                <a href="#" class="btn btn-primary">➕ Создать квест</a>
+            </div>
+            
+            {% if created_quests %}
+            <div class="quest-list">
+                {% for quest in created_quests %}
+                <div class="quest-list-item" onclick="location.href='{% url 'quests:detail' quest.pk %}'">
+                    <div class="quest-list-thumbnail">
+                        {% if quest.cover_image %}
+                            <img src="{{ quest.cover_image.url }}" alt="{{ quest.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                            📖
+                        {% endif %}
+                    </div>
+                    <div class="quest-list-info">
+                        <h3 class="quest-list-title">{{ quest.title }}</h3>
+                        <div class="quest-list-meta">
+                            <span>⭐ {{ quest.rating|floatformat:1 }}</span>
+                            <span>🎮 {{ quest.play_count }} прохождений</span>
+                            <span>
+                                {% if quest.is_published %}
+                                    <span style="color: var(--success);">✓ Опубликован</span>
+                                {% else %}
+                                    <span style="color: var(--warning);">📝 Черновик</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="quest-list-actions">
+                        <a href="#" class="btn btn-secondary" onclick="event.stopPropagation();">
+                            ✏️ Редактировать
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state-profile">
+                <div class="empty-state-icon">📝</div>
+                <p>Вы ещё не создали ни одного квеста</p>
+                <a href="#" class="btn btn-primary" style="margin-top: 1rem;">Создать первый квест</a>
+            </div>
+            {% endif %}
+        </section>
+        
+        <!-- Прогресс прохождения -->
+        <section class="profile-section" id="progress">
+            <div class="profile-section-header">
+                <h2 class="profile-section-title">🎮 Мой прогресс</h2>
+            </div>
+            
+            {% if progress %}
+            {% for prog in progress %}
+            <div class="progress-item">
+                <div class="progress-header">
+                    <h3 class="progress-title">{{ prog.quest.title }}</h3>
+                    <span class="progress-status {% if prog.is_completed %}completed{% else %}in-progress{% endif %}">
+                        {% if prog.is_completed %}✓ Завершено{% else %}▶️ В процессе{% endif %}
+                    </span>
+                </div>
+                
+                {% if not prog.is_completed %}
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 45%;"></div>
+                </div>
+                <div class="progress-details">
+                    <span>Текущая сцена: {{ prog.current_scene.title }}</span>
+                    <span>Последняя игра: {{ prog.last_played|date:"d.m.Y" }}</span>
+                </div>
+                {% else %}
+                <div class="progress-details">
+                    <span>Пройдено: {{ prog.last_played|date:"d.m.Y" }}</span>
+                </div>
+                {% endif %}
+                
+                <div style="margin-top: 1rem;">
+                    <a href="#" class="btn btn-primary">
+                        {% if prog.is_completed %}🔄 Пройти заново{% else %}▶️ Продолжить{% endif %}
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state-profile">
+                <div class="empty-state-icon">🎮</div>
+                <p>Вы ещё не начали проходить квесты</p>
+                <a href="{% url 'quests:catalog' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                    Найти квест
+                </a>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}

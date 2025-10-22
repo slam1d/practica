@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quest.title }} - LoreLoom{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Шапка квеста -->
+<div class="quest-detail-header">
+    {% if quest.cover_image %}
+        <img src="{{ quest.cover_image.url }}" alt="{{ quest.title }}" class="quest-cover-large">
+    {% else %}
+        <div class="quest-cover-large" style="display: flex; align-items: center; justify-content: center; font-size: 5rem;">
+            📖
+        </div>
+    {% endif %}
+    
+    <div class="quest-detail-info">
+        <h1 class="quest-detail-title">{{ quest.title }}</h1>
+        
+        <div class="quest-author">
+            <span>👤 Автор:</span>
+            <strong>{{ quest.author.username }}</strong>
+            <span>•</span>
+            <span>📅 {{ quest.created_at|date:"d.m.Y" }}</span>
+        </div>
+        
+        <div class="quest-stats">
+            <div class="stat-item">
+                <span class="stat-value">⭐ {{ avg_rating|floatformat:1|default:"—" }}</span>
+                <span class="stat-label">Рейтинг</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">🎮 {{ quest.play_count }}</span>
+                <span class="stat-label">Прохождений</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">⏱️ {{ quest.estimated_time }}</span>
+                <span class="stat-label">Минут</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value difficulty-badge difficulty-{{ quest.difficulty }}">
+                    {{ quest.get_difficulty_display }}
+                </span>
+                <span class="stat-label">Сложность</span>
+            </div>
+        </div>
+        
+        {% if quest.tags.all %}
+        <div class="quest-tags">
+            {% for tag in quest.tags.all %}
+            <a href="{% url 'quests:catalog' %}?tag={{ tag.slug }}" class="tag-chip">
+                {{ tag.name }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="quest-description">
+            {{ quest.description|linebreaks }}
+        </div>
+        
+        {% if user_progress %}
+        <div class="progress-indicator">
+            📍 Вы уже начали этот квест!
+            <strong>Текущая сцена: {{ user_progress.current_scene.title }}</strong>
+        </div>
+        {% endif %}
+        
+        <div class="quest-actions">
+            {% if user.is_authenticated %}
+                {% if user_progress %}
+                    <a href="#" class="btn btn-primary btn-large">
+                        ▶️ Продолжить прохождение
+                    </a>
+                {% else %}
+                    <a href="#" class="btn btn-primary btn-large">
+                        🎮 Начать квест
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-primary btn-large">
+                    🎮 Войдите, чтобы начать
+                </a>
+            {% endif %}
+
+            {% if user == quest.author %}
+            <a href="#" class="btn btn-secondary btn-large">
+                ✏️ Редактировать
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Секция с отзывами -->
+<div class="detail-section">
+    <h2 class="detail-section-title">💬 Отзывы ({{ ratings.count }})</h2>
+
+    {% if user.is_authenticated and user != quest.author %}
+    <div class="rating-form">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Оставить отзыв</h3>
+        <form method="post" action="#">
+            {% csrf_token %}
+            <div class="star-rating">
+                <input type="radio" name="rating" value="5" id="star5">
+                <label for="star5">⭐</label>
+                <input type="radio" name="rating" value="4" id="star4">
+                <label for="star4">⭐</label>
+                <input type="radio" name="rating" value="3" id="star3">
+                <label for="star3">⭐</label>
+                <input type="radio" name="rating" value="2" id="star2">
+                <label for="star2">⭐</label>
+                <input type="radio" name="rating" value="1" id="star1">
+                <label for="star1">⭐</label>
+            </div>
+            <div class="form-group">
+                <textarea
+                    name="review"
+                    class="form-input"
+                    rows="4"
+                    placeholder="Поделитесь своими впечатлениями..."
+                    style="width: 100%;"
+                ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if ratings %}
+    <div class="reviews-list">
+        {% for rating in ratings %}
+        <div class="review-card">
+            <div class="review-header">
+                <span class="review-author">👤 {{ rating.user.username }}</span>
+                <span class="review-rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= rating.rating %}⭐{% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+            {% if rating.review %}
+            <p class="review-text">{{ rating.review }}</p>
+            {% endif %}
+            <div class="review-date">{{ rating.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-reviews">
+        <p>Пока нет отзывов. Будьте первым!</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Секция с информацией о квесте -->
+<div class="detail-section">
+    <h2 class="detail-section-title">📊 Статистика</h2>
+    <div class="quest-stats" style="border: none; padding-bottom: 0;">
+        <div class="stat-item">
+            <span class="stat-value">{{ quest.scenes.count }}</span>
+            <span class="stat-label">Сцен в квесте</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value">{{ quest.updated_at|date:"d.m.Y" }}</span>
+            <span class="stat-label">Последнее обновление</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

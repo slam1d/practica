@@ -1,0 +1,180 @@
+/* ==================== ПЕРЕМЕННЫЕ ==================== */
+:root {
+    /* Основные цвета */
+    --primary-black: #000000;
+    --deep-space: #0A0A0A;
+    --charcoal: #1A1A1A;
+
+    /* Акценты */
+    --gold-vein: #FFD700;
+    --ancient-bronze: #CD7F32;
+    --mystic-purple: #8A2BE2;
+    --scroll-parchment: #F5F5DC;
+
+    /* Градиенты */
+    --hero-gradient: linear-gradient(135deg, #000000 0%, #1A1A1A 100%);
+    --card-gradient: linear-gradient(145deg, #0A0A0A 0%, #2A2A2A 100%);
+
+    /* Текст */
+    --text-primary: #FFFFFF;
+    --text-secondary: #B0B0B0;
+    --text-accent: #FFD700;
+
+    /* Состояния */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+}
+
+/* ==================== БАЗОВЫЕ СТИЛИ ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--hero-gradient);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ==================== HEADER ==================== */
+header {
+    background: var(--deep-space);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--gold-vein);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.3s;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.logo::before {
+    content: "🎮";
+}
+
+nav {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.3s;
+    font-weight: 500;
+}
+
+nav a:hover {
+    color: var(--gold-vein);
+}
+
+/* ==================== MAIN CONTENT ==================== */
+main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ==================== MESSAGES ==================== */
+.messages {
+    max-width: 1400px;
+    margin: 1rem auto;
+    padding: 0 2rem;
+}
+
+.message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.message.success {
+    background: rgba(16, 185, 129, 0.2);
+    border-left: 4px solid var(--success);
+}
+
+.message.success::before {
+    content: "✓";
+    font-size: 1.5rem;
+    color: var(--success);
+}
+
+.message.error {
+    background: rgba(239, 68, 68, 0.2);
+    border-left: 4px solid var(--error);
+}
+
+.message.error::before {
+    content: "✕";
+    font-size: 1.5rem;
+    color: var(--error);
+}
+
+.message.info {
+    background: rgba(138, 43, 226, 0.2);
+    border-left: 4px solid var(--mystic-purple);
+}
+
+.message.info::before {
+    content: "ℹ";
+    font-size: 1.5rem;
+    color: var(--mystic-purple);
+}
+
+/* ==================== FOOTER ==================== */
+footer {
+    background: var(--deep-space);
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 4rem;
+    border-top: 1px solid var(--charcoal);
+}
