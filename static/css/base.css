@@ -1,4 +1,7 @@
 /* ==================== ПЕРЕМЕННЫЕ ==================== */
+html{
+    background-color: var(--primary-black);
+}
 :root {
     /* Основные цвета */
     --primary-black: #000000;
