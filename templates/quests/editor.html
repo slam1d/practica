@@ -456,37 +456,100 @@
     }
 
     // Добавление выбора
-    async function addChoice() {
-        if (!selectedSceneId) return;
+async function addChoice() {
+    if (!selectedSceneId) return;
 
-        const text = prompt('Введите текст выбора:');
-        if (!text) return;
-
-        try {
-            const response = await fetch(`/api/scene/${selectedSceneId}/choice/create/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({
-                    text: text,
-                    next_scene_id: null
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Ошибка при создании выбора');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Ошибка при создании выбора');
+    // Получаем список всех сцен для выбора следующей сцены
+    const allScenes = [];
+    document.querySelectorAll('.scene-card').forEach(card => {
+        const id = card.getAttribute('data-scene-id');
+        const title = card.querySelector('.scene-title-display').textContent;
+        // Исключаем текущую сцену из списка возможных следующих сцен
+        if (id != selectedSceneId) {
+            allScenes.push({ id, title });
         }
+    });
+
+    if (allScenes.length === 0) {
+        alert('Сначала создайте другие сцены, чтобы указать переход');
+        return;
     }
+
+    // Создаем модальное окно для выбора следующей сцены
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">➕ Добавить выбор</h2>
+                <button class="modal-close" onclick="this.closest('.modal').remove()">✕</button>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Текст выбора</label>
+                <input type="text" id="choice-text-input" class="property-input" placeholder="Введите текст выбора...">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Следующая сцена</label>
+                <select id="next-scene-select" class="property-select">
+                    <option value="">-- Выберите сцену --</option>
+                    ${allScenes.map(scene =>
+                        `<option value="${scene.id}">${scene.title}</option>`
+                    ).join('')}
+                </select>
+            </div>
+            <button onclick="submitChoice()" class="property-save-btn">
+                💾 Создать выбор
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Отправка выбора на сервер
+async function submitChoice() {
+    const textInput = document.getElementById('choice-text-input');
+    const sceneSelect = document.getElementById('next-scene-select');
+
+    const text = textInput.value.trim();
+    const nextSceneId = sceneSelect.value;
+
+    if (!text) {
+        alert('Введите текст выбора');
+        return;
+    }
+
+    if (!nextSceneId) {
+        alert('Выберите следующую сцену');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/scene/${selectedSceneId}/choice/create/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                text: text,
+                next_scene: nextSceneId,
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Закрываем модальное окно
+            document.querySelector('.modal').remove();
+            location.reload();
+        } else {
+            alert('Ошибка при создании выбора: ' + (data.message || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Ошибка при создании выбора');
+    }
+}
 
     // Удаление выбора
     async function deleteChoice(choiceId) {
