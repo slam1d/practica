@@ -73,11 +73,11 @@
         <div class="quest-actions">
             {% if user.is_authenticated %}
                 {% if user_progress %}
-                    <a href="#" class="btn btn-primary btn-large">
+                    <a href="{% url 'gameplay:play' user_progress.pk %}" class="btn btn-primary btn-large">
                         ▶️ Продолжить прохождение
                     </a>
                 {% else %}
-                    <a href="#" class="btn btn-primary btn-large">
+                    <a href="{% url 'gameplay:start' quest.pk %}" class="btn btn-primary btn-large">
                         🎮 Начать квест
                     </a>
                 {% endif %}
@@ -88,9 +88,9 @@
             {% endif %}
 
             {% if user == quest.author %}
-            <a href="#" class="btn btn-secondary btn-large">
-                ✏️ Редактировать
-            </a>
+                <a href="{% url 'quests:editor' quest.pk %}" class="btn btn-secondary btn-large">
+                    ✏️ Редактировать
+                </a>
             {% endif %}
         </div>
     </div>
@@ -103,7 +103,7 @@
     {% if user.is_authenticated and user != quest.author %}
     <div class="rating-form">
         <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Оставить отзыв</h3>
-        <form method="post" action="#">
+        <form method="post" action="{% url 'gameplay:rate' quest.pk %}">
             {% csrf_token %}
             <div class="star-rating">
                 <input type="radio" name="rating" value="5" id="star5">

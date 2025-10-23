@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+        'ENGINE': 'django.db.backends.sqlite3', # В дальнейшем будем использовать Postgre
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }

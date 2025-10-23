@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ quest.title }} - Прохождение{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/play.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Верхняя панель -->
+<div class="play-header">
+    <div class="play-title">
+        🎮 {{ quest.title }}
+    </div>
+    <div class="play-actions">
+        <a href="{% url 'quests:detail' quest.pk %}" class="btn btn-secondary">
+            ℹ️ О квесте
+        </a>
+        <button onclick="if(confirm('Покинуть квест? Прогресс сохранится.')) location.href='{% url 'gameplay:abandon' progress.pk %}'" class="btn btn-danger">
+            ❌ Выйти
+        </button>
+    </div>
+</div>
+
+<!-- Основной контейнер -->
+<div class="play-container">
+    <!-- Основная область: Сцена -->
+    <div class="scene-container">
+        {% if scene.background_image %}
+            <img src="{{ scene.background_image.url }}" alt="{{ scene.title }}" class="scene-background">
+        {% else %}
+            <div class="scene-background">
+                📖
+            </div>
+        {% endif %}
+        
+        <div class="scene-content">
+            {% if scene.is_starting_scene or scene.is_ending_scene %}
+            <div class="scene-badges">
+                {% if scene.is_starting_scene %}
+                <span class="scene-badge badge-start">🏁 Начало</span>
+                {% endif %}
+                {% if scene.is_ending_scene %}
+                <span class="scene-badge badge-end">🎯 Финал</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <h1 class="scene-title">{{ scene.title }}</h1>
+            
+            <div class="scene-text">{{ scene.content }}</div>
+            
+            {% if is_final %}
+            <div class="completion-panel">
+                <div class="completion-title">🎉 Поздравляем!</div>
+                <p class="completion-text">
+                    Вы успешно завершили квест "{{ quest.title }}"!
+                </p>
+                <div class="completion-actions">
+                    <a href="{% url 'gameplay:restart' progress.pk %}" class="btn btn-primary">
+                        🔄 Пройти заново
+                    </a>
+                    <a href="{% url 'quests:detail' quest.pk %}" class="btn btn-secondary">
+                        💬 Оставить отзыв
+                    </a>
+                    <a href="{% url 'quests:catalog' %}" class="btn btn-secondary">
+                        📚 Другие квесты
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Боковая панель -->
+    <aside class="play-sidebar">
+        <!-- Доступные действия -->
+        {% if not is_final %}
+        <div class="sidebar-panel">
+            <h2 class="sidebar-title">🎯 Ваши действия</h2>
+            
+            {% if choices %}
+            <div class="choices-list">
+                {% for choice in choices %}
+                <form method="post" action="{% url 'gameplay:choice' progress.pk choice.pk %}" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="choice-button">
+                        {{ choice.text }}
+                    </button>
+                </form>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-choices">
+                <p>😕 Нет доступных действий</p>
+                <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                    Возможно, автор ещё не завершил квест
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Прогресс -->
+        <div class="sidebar-panel">
+            <h2 class="sidebar-title">📊 Прогресс</h2>
+            <div class="progress-info">
+                <div class="progress-stat">
+                    <span class="progress-label">Начато:</span>
+                    <span class="progress-value">{{ progress.started_at|date:"d.m.Y" }}</span>
+                </div>
+                <div class="progress-stat">
+                    <span class="progress-label">Последняя игра:</span>
+                    <span class="progress-value">{{ progress.last_played|date:"d.m.Y H:i" }}</span>
+                </div>
+                <div class="progress-stat">
+                    <span class="progress-label">Статус:</span>
+                    <span class="progress-value">
+                        {% if progress.is_completed %}
+                            ✓ Завершён
+                        {% else %}
+                            ▶️ В процессе
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Инвентарь (пока пустой, для будущего функционала) -->
+        <div class="sidebar-panel">
+            <h2 class="sidebar-title">🎒 Инвентарь</h2>
+            <div class="empty-inventory">
+                Пусто
+            </div>
+        </div>
+        
+        <!-- Дополнительные действия -->
+        <div class="sidebar-panel">
+            <h2 class="sidebar-title">⚙️ Действия</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <button onclick="if(confirm('Начать квест заново? Текущий прогресс будет потерян.')) location.href='{% url 'gameplay:restart' progress.pk %}'" class="btn btn-secondary" style="width: 100%;">
+                    🔄 Начать заново
+                </button>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

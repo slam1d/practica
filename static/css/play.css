@@ -1,0 +1,295 @@
+/* ==================== КОНТЕЙНЕР ПЛЕЕРА ==================== */
+.play-container {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    min-height: calc(100vh - 250px);
+}
+
+/* ==================== ВЕРХНЯЯ ПАНЕЛЬ ==================== */
+.play-header {
+    background: var(--card-gradient);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.play-title {
+    font-size: 1.5rem;
+    color: var(--gold-vein);
+}
+
+.play-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* ==================== ОСНОВНАЯ ОБЛАСТЬ (Сцена) ==================== */
+.scene-container {
+    background: var(--card-gradient);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.scene-background {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--charcoal) 0%, var(--deep-space) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+}
+
+.scene-content {
+    padding: 2.5rem;
+}
+
+.scene-title {
+    font-size: 2rem;
+    color: var(--gold-vein);
+    margin-bottom: 1.5rem;
+}
+
+.scene-text {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    white-space: pre-wrap;
+}
+
+.scene-badges {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.scene-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.badge-start {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success);
+}
+
+.badge-end {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--error);
+}
+
+/* ==================== БОКОВАЯ ПАНЕЛЬ (Выборы и инфо) ==================== */
+.play-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sidebar-panel {
+    background: var(--card-gradient);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.sidebar-title {
+    font-size: 1.2rem;
+    color: var(--gold-vein);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* ==================== ВЫБОРЫ ==================== */
+.choices-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.choice-button {
+    background: var(--charcoal);
+    border: 2px solid transparent;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.choice-button::before {
+    content: '→';
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--gold-vein);
+    transition: left 0.3s;
+}
+
+.choice-button:hover {
+    border-color: var(--gold-vein);
+    background: rgba(255, 215, 0, 0.05);
+    padding-left: 2.5rem;
+}
+
+.choice-button:hover::before {
+    left: 1rem;
+}
+
+.choice-button:active {
+    transform: scale(0.98);
+}
+
+.no-choices {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+/* ==================== ПРОГРЕСС ==================== */
+.progress-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.progress-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--charcoal);
+    border-radius: 8px;
+}
+
+.progress-label {
+    color: var(--text-secondary);
+}
+
+.progress-value {
+    color: var(--gold-vein);
+    font-weight: bold;
+}
+
+/* ==================== ИНВЕНТАРЬ ==================== */
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.75rem;
+}
+
+.inventory-item {
+    aspect-ratio: 1;
+    background: var(--charcoal);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.inventory-item:hover {
+    border-color: var(--gold-vein);
+    transform: translateY(-2px);
+}
+
+.inventory-icon {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+}
+
+.inventory-name {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.empty-inventory {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* ==================== ФИНАЛЬНАЯ СЦЕНА ==================== */
+.completion-panel {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(205, 127, 50, 0.1));
+    border: 2px solid var(--gold-vein);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.completion-title {
+    font-size: 2rem;
+    color: var(--gold-vein);
+    margin-bottom: 1rem;
+}
+
+.completion-text {
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.completion-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ==================== АДАПТИВНОСТЬ ==================== */
+@media (max-width: 1024px) {
+    .play-container {
+        grid-template-columns: 1fr;
+    }
+
+    .play-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .play-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 768px) {
+    .scene-content {
+        padding: 1.5rem;
+    }
+
+    .scene-title {
+        font-size: 1.5rem;
+    }
+
+    .scene-text {
+        font-size: 1rem;
+    }
+
+    .choice-button {
+        padding: 1rem;
+    }
+}

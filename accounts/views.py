@@ -13,7 +13,7 @@ def register_view(request):
             user = form.save()
             login(request, user)  # Автоматический вход после регистрации
             messages.success(request, 'Добро пожаловать в LoreLoom!')
-            return redirect('home')
+            return redirect('quests:home')
     else:
         form = RegisterForm()
 
@@ -31,7 +31,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'С возвращением, {username}!')
-                return redirect('home')
+                return redirect('quests:home')
     else:
         form = LoginForm()
 
@@ -42,7 +42,7 @@ def logout_view(request):
     """Выход пользователя"""
     logout(request)
     messages.info(request, 'Вы вышли из системы')
-    return redirect('home')
+    return redirect('quests:home')
 
 
 @login_required

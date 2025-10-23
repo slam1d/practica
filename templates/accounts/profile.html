@@ -58,7 +58,7 @@
         <section class="profile-section" id="created">
             <div class="profile-section-header">
                 <h2 class="profile-section-title">📝 Мои квесты</h2>
-                <a href="#" class="btn btn-primary">➕ Создать квест</a>
+                <a href="{% url 'quests:create' %}" class="btn btn-primary">➕ Создать квест</a>
             </div>
             
             {% if created_quests %}
@@ -87,7 +87,7 @@
                         </div>
                     </div>
                     <div class="quest-list-actions">
-                        <a href="#" class="btn btn-secondary" onclick="event.stopPropagation();">
+                        <a href="{% url 'quests:editor' quest.pk %}" class="btn btn-secondary" onclick="event.stopPropagation();">
                             ✏️ Редактировать
                         </a>
                     </div>
@@ -98,7 +98,7 @@
             <div class="empty-state-profile">
                 <div class="empty-state-icon">📝</div>
                 <p>Вы ещё не создали ни одного квеста</p>
-                <a href="#" class="btn btn-primary" style="margin-top: 1rem;">Создать первый квест</a>
+                <a href="{% url 'quests:create' %}" class="btn btn-primary" style="margin-top: 1rem;">Создать первый квест</a>
             </div>
             {% endif %}
         </section>
@@ -134,7 +134,7 @@
                 {% endif %}
                 
                 <div style="margin-top: 1rem;">
-                    <a href="#" class="btn btn-primary">
+                    <a href="{% url 'gameplay:play' prog.pk %}" class="btn btn-primary">
                         {% if prog.is_completed %}🔄 Пройти заново{% else %}▶️ Продолжить{% endif %}
                     </a>
                 </div>
