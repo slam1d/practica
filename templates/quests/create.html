@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Создать квест - LoreLoom{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h1>✨ Создать новый квест</h1>
+        <p>Начните создание вашего интерактивного приключения</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="title" class="form-label">Название квеста</label>
+            <input 
+                type="text" 
+                id="title" 
+                name="title" 
+                class="form-input" 
+                placeholder="Например: Тайна старого замка"
+                required
+            >
+        </div>
+        
+        <div class="form-group">
+            <label for="description" class="form-label">Описание</label>
+            <textarea 
+                id="description" 
+                name="description" 
+                class="form-input" 
+                rows="5"
+                placeholder="Опишите сюжет вашего квеста..."
+                required
+            ></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="difficulty" class="form-label">Сложность</label>
+            <select id="difficulty" name="difficulty" class="form-input">
+                <option value="easy">Лёгкий</option>
+                <option value="medium" selected>Средний</option>
+                <option value="hard">Сложный</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="estimated_time" class="form-label">Время прохождения (минут)</label>
+            <input 
+                type="number" 
+                id="estimated_time" 
+                name="estimated_time" 
+                class="form-input" 
+                value="30"
+                min="5"
+                max="300"
+            >
+        </div>
+        
+        <button type="submit" class="form-submit">
+            🚀 Создать и перейти к редактору
+        </button>
+    </form>
+    
+    <div class="form-footer">
+        <p><a href="{% url 'accounts:profile' %}">← Вернуться в профиль</a></p>
+    </div>
+</div>
+{% endblock %}

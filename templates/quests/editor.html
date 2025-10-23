@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Редактор: {{ quest.title }} - LoreLoom{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/editor.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Верхняя панель -->
+<div class="editor-topbar">
+    <div class="editor-title">
+        ✏️ {{ quest.title }}
+        <span class="quest-status {% if quest.is_published %}published{% else %}draft{% endif %}">
+            {% if quest.is_published %}✓ Опубликован{% else %}📝 Черновик{% endif %}
+        </span>
+    </div>
+
+    <div class="editor-actions">
+        <button onclick="openQuestSettings()" class="btn btn-secondary">⚙️ Настройки</button>
+        <a href="{% url 'quests:detail' quest.pk %}" class="btn btn-secondary">👁️ Предпросмотр</a>
+        {% if quest.is_published %}
+            <form method="post" action="{% url 'quests:unpublish' quest.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">📥 Снять с публикации</button>
+            </form>
+        {% else %}
+            <form method="post" action="{% url 'quests:publish' quest.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">🚀 Опубликовать</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Основной контейнер редактора -->
+<div class="editor-container">
+    <!-- Левая панель: Элементы -->
+    <aside class="editor-sidebar">
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">📝 Действия</h3>
+            <div class="element-list">
+                <button class="element-item" onclick="createNewScene()">
+                    ➕ Добавить сцену
+                </button>
+            </div>
+        </div>
+
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">📊 Статистика</h3>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                <p style="margin-bottom: 0.5rem;">Сцен: <strong style="color: var(--gold-vein);">{{ scenes.count }}</strong></p>
+                <p>Просмотров: <strong style="color: var(--gold-vein);">{{ quest.play_count }}</strong></p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Центральная область: Список сцен -->
+    <main class="editor-main">
+        {% if scenes %}
+        <div class="scenes-list" id="scenes-list">
+            {% for scene in scenes %}
+            <div class="scene-card {% if scene.is_starting_scene %}starting{% elif scene.is_ending_scene %}ending{% endif %}"
+                 data-scene-id="{{ scene.id }}"
+                 onclick="selectScene({{ scene.id }})">
+                <div class="scene-header">
+                    <h3 class="scene-title-display">{{ scene.title }}</h3>
+                    <div class="scene-badges">
+                        {% if scene.is_starting_scene %}
+                        <span class="scene-badge start">🏁 Начало</span>
+                        {% endif %}
+                        {% if scene.is_ending_scene %}
+                        <span class="scene-badge end">🎯 Финал</span>
+                        {% endif %}
+                    </div>
+                    <div class="scene-actions">
+                        <button class="icon-btn" onclick="event.stopPropagation(); selectScene({{ scene.id }})" title="Редактировать">
+                            ✏️
+                        </button>
+                        <button class="icon-btn" onclick="event.stopPropagation(); deleteScene({{ scene.id }})" title="Удалить">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+
+                <p class="scene-content-display">
+                    {{ scene.content|truncatewords:30 }}
+                </p>
+
+                {% if scene.choices.all %}
+                <div class="scene-choices">
+                    <div class="choices-title">Доступные выборы:</div>
+                    {% for choice in scene.choices.all %}
+                    <div class="choice-item">
+                        <div>
+                            <div class="choice-text">{{ choice.text }}</div>
+                            {% if choice.next_scene %}
+                            <div class="choice-target">→ {{ choice.next_scene.title }}</div>
+                            {% else %}
+                            <div class="choice-target" style="color: var(--error);">→ Не указана следующая сцена</div>
+                            {% endif %}
+                        </div>
+                        <button class="icon-btn" onclick="event.stopPropagation(); deleteChoice({{ choice.id }})" title="Удалить">
+                            ✕
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state-editor">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">📝</div>
+            <h3>Пока нет сцен</h3>
+            <p>Начните с создания первой сцены для вашего квеста</p>
+            <button onclick="createNewScene()" class="btn btn-primary" style="margin-top: 1.5rem;">
+                ➕ Создать первую сцену
+            </button>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Правая панель: Свойства выбранной сцены -->
+    <aside class="editor-properties" id="properties-panel">
+        <div class="empty-state-editor">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👈</div>
+            <p>Выберите сцену для редактирования</p>
+        </div>
+    </aside>
+</div>
+
+<!-- Модальное окно настроек квеста -->
+<div class="modal" id="quest-settings-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">⚙️ Настройки квеста</h2>
+            <button class="modal-close" onclick="closeQuestSettings()">✕</button>
+        </div>
+
+        <form method="post" action="{% url 'quests:update' quest.pk %}">
+            {% csrf_token %}
+
+            <div class="property-group">
+                <label class="property-label">Название</label>
+                <input
+                    type="text"
+                    name="title"
+                    class="property-input"
+                    value="{{ quest.title }}"
+                    required
+                >
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Описание</label>
+                <textarea
+                    name="description"
+                    class="property-textarea"
+                    required
+                >{{ quest.description }}</textarea>
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Сложность</label>
+                <select name="difficulty" class="property-select">
+                    <option value="easy" {% if quest.difficulty == 'easy' %}selected{% endif %}>Лёгкий</option>
+                    <option value="medium" {% if quest.difficulty == 'medium' %}selected{% endif %}>Средний</option>
+                    <option value="hard" {% if quest.difficulty == 'hard' %}selected{% endif %}>Сложный</option>
+                </select>
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Время прохождения (минут)</label>
+                <input
+                    type="number"
+                    name="estimated_time"
+                    class="property-input"
+                    value="{{ quest.estimated_time }}"
+                    min="5"
+                    max="300"
+                >
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Жанры</label>
+                <div class="property-checkbox-group">
+                    {% for tag in tags %}
+                    <label class="property-checkbox-label">
+                        <input
+                            type="checkbox"
+                            name="tags"
+                            value="{{ tag.id }}"
+                            class="property-checkbox"
+                            {% if tag in quest.tags.all %}checked{% endif %}
+                        >
+                        {{ tag.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="property-save-btn">
+                💾 Сохранить изменения
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const questId = {{ quest.pk }};
+    let selectedSceneId = null;
+
+    // Получение CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Открытие настроек квеста
+    function openQuestSettings() {
+        document.getElementById('quest-settings-modal').classList.add('active');
+    }
+
+    function closeQuestSettings() {
+        document.getElementById('quest-settings-modal').classList.remove('active');
+    }
+
+    // Создание новой сцены
+    async function createNewScene() {
+        try {
+            const response = await fetch(`/api/quest/${questId}/scene/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    title: 'Новая сцена',
+                    content: 'Описание сцены...'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при создании сцены');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при создании сцены');
+        }
+    }
+
+    // Выбор сцены для редактирования
+    async function selectScene(sceneId) {
+        document.querySelectorAll('.scene-card').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        const selectedCard = document.querySelector(`[data-scene-id="${sceneId}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('active');
+        }
+
+        selectedSceneId = sceneId;
+
+        const scene = await loadSceneData(sceneId);
+        if (scene) {
+            renderPropertiesPanel(scene);
+        }
+    }
+
+    // Загрузка данных сцены
+    function loadSceneData(sceneId) {
+        const sceneCard = document.querySelector(`[data-scene-id="${sceneId}"]`);
+        if (!sceneCard) return null;
+
+        const title = sceneCard.querySelector('.scene-title-display').textContent;
+        const contentEl = sceneCard.querySelector('.scene-content-display');
+        const content = contentEl ? contentEl.textContent.trim() : '';
+        const isStarting = sceneCard.classList.contains('starting');
+        const isEnding = sceneCard.classList.contains('ending');
+
+        return {
+            id: sceneId,
+            title: title,
+            content: content,
+            is_starting_scene: isStarting,
+            is_ending_scene: isEnding
+        };
+    }
+
+    // Отрисовка панели свойств
+    function renderPropertiesPanel(scene) {
+        const panel = document.getElementById('properties-panel');
+
+        const allScenes = [];
+        document.querySelectorAll('.scene-card').forEach(card => {
+            const id = card.getAttribute('data-scene-id');
+            const title = card.querySelector('.scene-title-display').textContent;
+            if (id != scene.id) {
+                allScenes.push({ id, title });
+            }
+        });
+
+        panel.innerHTML = `
+            <h2 class="properties-title">✏️ Редактировать сцену</h2>
+
+            <div class="property-group">
+                <label class="property-label">Название сцены</label>
+                <input
+                    type="text"
+                    id="scene-title"
+                    class="property-input"
+                    value="${scene.title}"
+                >
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Текст сцены</label>
+                <textarea
+                    id="scene-content"
+                    class="property-textarea"
+                >${scene.content}</textarea>
+            </div>
+
+            <div class="property-group">
+                <label class="property-label">Тип сцены</label>
+                <div class="property-checkbox-group">
+                    <label class="property-checkbox-label">
+                        <input
+                            type="checkbox"
+                            id="scene-is-starting"
+                            class="property-checkbox"
+                            ${scene.is_starting_scene ? 'checked' : ''}
+                        >
+                        🏁 Начальная сцена
+                    </label>
+                    <label class="property-checkbox-label">
+                        <input
+                            type="checkbox"
+                            id="scene-is-ending"
+                            class="property-checkbox"
+                            ${scene.is_ending_scene ? 'checked' : ''}
+                        >
+                        🎯 Финальная сцена
+                    </label>
+                </div>
+            </div>
+
+            <button onclick="saveScene()" class="property-save-btn">
+                💾 Сохранить сцену
+            </button>
+
+            <div class="property-group" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--charcoal);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <label class="property-label" style="margin-bottom: 0;">Выборы</label>
+                    <button onclick="addChoice()" class="icon-btn" style="color: var(--gold-vein);">
+                        ➕
+                    </button>
+                </div>
+                <div id="choices-list">
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        Выборы отображаются в карточке сцены слева.
+                        Для добавления выбора нажмите кнопку "➕" выше.
+                    </p>
+                </div>
+            </div>
+
+            <button onclick="deleteScene(${scene.id})" class="btn btn-danger" style="width: 100%; margin-top: 2rem;">
+                🗑️ Удалить сцену
+            </button>
+        `;
+    }
+
+    // Сохранение сцены
+    async function saveScene() {
+        if (!selectedSceneId) return;
+
+        const title = document.getElementById('scene-title').value;
+        const content = document.getElementById('scene-content').value;
+        const isStarting = document.getElementById('scene-is-starting').checked;
+        const isEnding = document.getElementById('scene-is-ending').checked;
+
+        try {
+            const response = await fetch(`/api/scene/${selectedSceneId}/update/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    title: title,
+                    content: content,
+                    is_starting_scene: isStarting,
+                    is_ending_scene: isEnding
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при сохранении');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при сохранении');
+        }
+    }
+
+    // Удаление сцены
+    async function deleteScene(sceneId) {
+        if (!confirm('Вы уверены, что хотите удалить эту сцену?')) return;
+
+        try {
+            const response = await fetch(`/api/scene/${sceneId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при удалении');
+        }
+    }
+
+    // Добавление выбора
+    async function addChoice() {
+        if (!selectedSceneId) return;
+
+        const text = prompt('Введите текст выбора:');
+        if (!text) return;
+
+        try {
+            const response = await fetch(`/api/scene/${selectedSceneId}/choice/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    text: text,
+                    next_scene_id: null
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при создании выбора');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при создании выбора');
+        }
+    }
+
+    // Удаление выбора
+    async function deleteChoice(choiceId) {
+        if (!confirm('Удалить этот выбор?')) return;
+
+        try {
+            const response = await fetch(`/api/choice/${choiceId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Ошибка при удалении');
+        }
+    }
+
+    // Закрытие модалки по клику вне её
+    window.onclick = function(event) {
+        const modal = document.getElementById('quest-settings-modal');
+        if (event.target === modal) {
+            closeQuestSettings();
+        }
+    }
+</script>
+{% endblock %}
